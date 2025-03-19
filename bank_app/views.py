@@ -2,11 +2,37 @@ from django.shortcuts import render
 from rest_framework.viewsets import ModelViewSet #API ma hune sab logic cha
 from rest_framework.generics import GenericAPIView # yesma API banauda chai sabei logic affei banauna paro
 from rest_framework.response import Response
-from .models import Account, Bank
-from .serializers import AccountSerializer,BankSerializer
+from rest_framework.decorators import api_view,permission_classes
+from rest_framework.authtoken.models import Token # fucntion based api ko lagi
+from .models import Account, Bank, User
+from .serializers import AccountSerializer,BankSerializer,UserSerializer
+from django.contrib.auth import authenticate #credential linxa ani valid cha ki nai check garca
 # Create your views here.
 
-
+@api_view(['POST']) #kun kun request garna payo
+def register(request):
+    serializer = UserSerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response('User Registered!')
+    else:
+        return Response(serializer.errors)
+    
+@api_view(['POST'])
+@permission_classes([])  #login lai chai jasle ni chalauna milnu paro so
+def login(request):
+    email = request.data.get('email')
+    password = request.data.get('password')
+    
+    user = authenticate(username=email,password=password)#match vovane user nikalxa or None
+    if user == None:
+        return Response('Invalid credentials!')
+    else:
+        token,_ = Token.objects.get_or_create(user = user)#duia value return garca so _
+        return Response(token.key)
+        
+    
+    
 
 
 #Frontend le API bata communicate garxa to do CRUD operation in backend
@@ -36,7 +62,47 @@ class BankApiView(GenericAPIView):
         
         return Response(serializer.data)
         
-        pass
+    def post(self, request):
+        #request ma sab data aauxa
+        serializer = BankSerializer(data = request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response('Data created!')
+        else:
+            return Response(serializer.errors)
+     
+class BankApiViewDetails(GenericAPIView):   
+    queryset = Bank.objects.all()
+    serializer_class = BankSerializer
+    
+    def get(self, request, pk):
+        try:
+            bank_obj = Bank.objects.get(id=pk)
+        except:
+            return Response('Data not Found!')
+        serializer = BankSerializer(bank_obj)
+        return Response(serializer.data)
+        
+    def put(self, request, pk):
+        try:
+            bank_obj = Bank.objects.get(id=pk)
+        except:
+            return Response('Data not Found!')
+        serializer = BankSerializer(bank_obj,data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response('Data updated!')
+        else:
+            return Response(serializer.errors)
+        
+    def delete(self, request, pk):
+        try:
+            bank_obj = Bank.objects.get(id=pk)
+        except:
+            return Response('Data not Found!')
+        serializer = BankSerializer(bank_obj,data=request.data)
+        bank_obj.delete()
+        return Response('Data Deleted')
 
 
 
