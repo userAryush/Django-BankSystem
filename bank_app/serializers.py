@@ -1,5 +1,9 @@
-from rest_framework.serializers import ModelSerializer#yesma json to obj,obj to json convert garne logic cha
-from .models import Account,Bank,User
+from rest_framework.serializers import ModelSerializer
+from .models import *
+from django.contrib.auth.models import Group
+
+#json lai object|| object lai json ma convert garna creating serializers using ModelSerializer which have all the required logic
+
 
 class AccountSerializer(ModelSerializer):
     # ya bata tala ModelSErializer ma already defined cha hamile override gareko ho
@@ -11,8 +15,20 @@ class BankSerializer(ModelSerializer):
     class Meta:
         model = Bank
         fields = '__all__'
+        
+class StatementSerializer(ModelSerializer):
+    class Meta:
+        model = Statement
+        fields = '__all__'
             
 class UserSerializer(ModelSerializer):
     class Meta:
         model = User
-        fields = ['email','password','username','number','address','image']
+        #json to obj or vv garda field ma jj cha tei matra convert hunxa an data create garda ni specify vako field matra create hunxa
+        fields = ['email','password','username','number','address','image','groups']#abstractuser have other fields as well so we need to specify the fields that we have created or need
+        
+class GroupSerializer(ModelSerializer):
+    class Meta:
+        model = Group
+        fields = ['id','name']
+        
